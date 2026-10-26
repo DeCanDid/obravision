@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { BadgeCheck, ChevronRight, ClipboardCheck, Headset, Store } from "lucide-react";
 import { site } from "@/lib/site";
 import { getProductBySlug, getRelatedProducts } from "@/lib/products";
-import { conditionLabel, specRows } from "@/lib/product-utils";
+import { conditionLabel, hasVariants, priceRange, specRows, totalStock } from "@/lib/product-utils";
 import ProductGallery from "@/components/ProductGallery";
 import ProductPurchase from "@/components/ProductPurchase";
 import ProductCard from "@/components/ProductCard";
@@ -65,14 +65,24 @@ export default async function ProductPage({ params }: Props) {
         : product.condition === "refurbished"
         ? "https://schema.org/RefurbishedCondition"
         : "https://schema.org/UsedCondition",
-    offers: {
-      "@type": "Offer",
-      url: `${site.url}/laptops/${product.slug}`,
-      priceCurrency: "NGN",
-      price: product.retail_price,
-      availability: inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-      seller: { "@type": "Organization", name: site.name },
-    },
+        offers: hasVariants(product)
+      ? {
+          "@type": "AggregateOffer",
+          url: `${site.url}/laptops/${product.slug}`,
+          priceCurrency: "NGN",
+          lowPrice: priceRange(product).min,
+          highPrice: priceRange(product).max,
+          offerCount: product.variants!.length,
+          availability: inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+        }
+      : {
+          "@type": "Offer",
+          url: `${site.url}/laptops/${product.slug}`,
+          priceCurrency: "NGN",
+          price: product.retail_price,
+          availability: inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+          seller: { "@type": "Organization", name: site.name },
+        },
   };
 
   const tiles = [

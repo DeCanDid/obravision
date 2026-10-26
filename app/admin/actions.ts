@@ -8,6 +8,7 @@ import { site } from "@/lib/site";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { clearFailures, isLocked, recordFailure } from "@/lib/rate-limit";
 import { createAdminSession, destroyAdminSession, isAdmin, safeEqual } from "@/lib/admin-auth";
+import type { Variant } from "@/lib/product-utils";
 
 const BUCKET = "product-images";
 const MAX_IMAGES = 6;
@@ -88,6 +89,15 @@ export async function getUploadTargets(
 
 /* ---------- Save product ---------- */
 
+export type VariantInput = {
+  ramGb: string;
+  storageGb: string;
+  storageType: string;
+  retailPrice: string;
+  wholesalePrice: string;
+  stock: string;
+};
+
 export type ProductInput = {
   name: string;
   brand: string;
@@ -106,6 +116,7 @@ export type ProductInput = {
   os: string;
   stock: string;
   featured: boolean;
+  variants: VariantInput[];
   images: string[];
 };
 
@@ -113,7 +124,8 @@ type CreateResult = { ok: true; slug: string } | { ok: false; error: string };
 
 const clean = (v: unknown, max: number) => String(v ?? "").trim().slice(0, max);
 const optionalText = (v: unknown, max: number) => clean(v, max) || null;
-const num = (v: string) => (v.trim() === "" ? null : Number(v));
+const num = (v: string) => (String(v ?? "").trim() === "" ? null : Number(v));
+const bad = (error: string): CreateResult => ({ ok: false, error });
 
 const slugify = (s: string) =>
   s
@@ -127,37 +139,100 @@ const slugify = (s: string) =>
     .replace(/-$/, "");
 
 export async function createProduct(input: ProductInput): Promise<CreateResult> {
-  if (!(await isAdmin())) return { ok: false, error: NOT_ALLOWED };
+  if (!(await isAdmin())) return bad(NOT_ALLOWED);
 
   const name = clean(input.name, 200);
   const shortDescription = clean(input.shortDescription, 300);
   const description = clean(input.description, 5000);
 
-  if (name.length < 10) return { ok: false, error: "Please enter the full product name (brand, model and key specs)." };
-  if (!site.brands.includes(input.brand)) return { ok: false, error: "Please choose a valid brand." };
-  if (!CONDITIONS.includes(input.condition)) return { ok: false, error: "Please choose a valid condition." };
-  if (shortDescription.length < 20) return { ok: false, error: "The short description should be at least 20 characters." };
-  if (description.length < 50) return { ok: false, error: "The full description should be at least 50 characters." };
+  if (name.length < 10) return bad("Please enter the full product name (brand, model and key specs).");
+  if (!site.brands.includes(input.brand)) return bad("Please choose a valid brand.");
+  if (!CONDITIONS.includes(input.condition)) return bad("Please choose a valid condition.");
+  if (shortDescription.length < 20) return bad("The short description should be at least 20 characters.");
+  if (description.length < 50) return bad("The full description should be at least 50 characters.");
 
-  const retail = num(input.retailPrice);
-  if (retail === null || !Number.isFinite(retail) || retail <= 0) return { ok: false, error: "Please enter a valid retail price." };
+  /* ----- Variations (optional) ----- */
+  let variants: Variant[] | null = null;
+  const rawVariants = Array.isArray(input.variants) ? input.variants : [];
 
-  const wholesale = num(input.wholesalePrice);
-  if (wholesale !== null && (!Number.isFinite(wholesale) || wholesale <= 0 || wholesale > retail)) {
-    return { ok: false, error: "The wholesale price must be a valid amount that is not higher than the retail price." };
+  if (rawVariants.length > 0) {
+    if (rawVariants.length > 8) return bad("You can add up to 8 configurations.");
+    const seen = new Set<string>();
+    const list: Variant[] = [];
+
+    for (const v of rawVariants) {
+      const price = num(v.retailPrice);
+      if (price === null || !Number.isFinite(price) || price <= 0) {
+        return bad("Each configuration needs a valid retail price.");
+      }
+      const wholesalePrice = num(v.wholesalePrice);
+      if (wholesalePrice !== null && (!Number.isFinite(wholesalePrice) || wholesalePrice <= 0 || wholesalePrice > price)) {
+        return bad("A configuration's wholesale price must be a valid amount that is not higher than its retail price.");
+      }
+      const ram = num(v.ramGb);
+      const gb = num(v.storageGb);
+      if (ram === null && gb === null) return bad("Each configuration needs a RAM size or a storage size.");
+      const stock = Math.floor(num(v.stock) ?? 0);
+      if (stock < 0 || stock > 100000) return bad("Please enter a valid stock quantity for each configuration.");
+
+      const type = gb !== null ? optionalText(v.storageType, 20) : null;
+      const key = `${ram}-${gb}-${type}`;
+      if (seen.has(key)) return bad("Two configurations are identical. Please change or remove one.");
+      seen.add(key);
+
+      list.push({
+        id: randomUUID().slice(0, 8),
+        ram_gb: ram,
+        storage_gb: gb,
+        storage_type: type,
+        retail_price: price,
+        wholesale_price: wholesalePrice,
+        stock,
+      });
+    }
+    variants = list;
   }
+
+  /* ----- Price, stock and RAM options ----- */
+  let retail: number;
+  let wholesale: number | null;
+  let stock: number;
+  let ramOptions: number[];
   const minQty = Math.floor(num(input.wholesaleMinQty) ?? 5);
-  if (wholesale !== null && (minQty < 2 || minQty > 999)) {
-    return { ok: false, error: "The wholesale minimum quantity must be between 2 and 999." };
+
+  if (variants) {
+    retail = Math.min(...variants.map((v) => v.retail_price));
+    const wholesalePrices = variants.map((v) => v.wholesale_price).filter((x): x is number => x !== null);
+    wholesale = wholesalePrices.length ? Math.min(...wholesalePrices) : null;
+    stock = variants.reduce((sum, v) => sum + v.stock, 0);
+    ramOptions = Array.from(new Set(variants.map((v) => v.ram_gb).filter((x): x is number => x !== null)));
+  } else {
+    const price = num(input.retailPrice);
+    if (price === null || !Number.isFinite(price) || price <= 0) return bad("Please enter a valid retail price.");
+    retail = price;
+
+    const w = num(input.wholesalePrice);
+    if (w !== null && (!Number.isFinite(w) || w <= 0 || w > retail)) {
+      return bad("The wholesale price must be a valid amount that is not higher than the retail price.");
+    }
+    wholesale = w;
+
+    stock = Math.floor(num(input.stock) ?? 0);
+    if (stock < 0 || stock > 100000) return bad("Please enter a valid stock quantity.");
+
+    const ram = num(input.ramGb);
+    ramOptions = ram !== null ? [ram] : [];
   }
 
-  const stock = Math.floor(num(input.stock) ?? 0);
-  if (stock < 0 || stock > 100000) return { ok: false, error: "Please enter a valid stock quantity." };
+  if (wholesale !== null && (minQty < 2 || minQty > 999)) {
+    return bad("The wholesale minimum quantity must be between 2 and 999.");
+  }
 
+  /* ----- Images ----- */
   const prefix = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${BUCKET}/`;
   const images = Array.isArray(input.images) ? input.images : [];
   if (images.length < 1 || images.length > MAX_IMAGES || !images.every((u) => typeof u === "string" && u.startsWith(prefix))) {
-    return { ok: false, error: "Please upload between 1 and 6 product images." };
+    return bad("Please upload between 1 and 6 product images.");
   }
 
   const admin = createAdminClient();
@@ -182,9 +257,9 @@ export async function createProduct(input: ProductInput): Promise<CreateResult> 
     wholesale_price: wholesale,
     wholesale_min_qty: wholesale !== null ? minQty : null,
     processor: optionalText(input.processor, 120),
-    ram_gb: num(input.ramGb),
-    storage_gb: num(input.storageGb),
-    storage_type: optionalText(input.storageType, 20),
+    ram_gb: variants ? null : num(input.ramGb),
+    storage_gb: variants ? null : num(input.storageGb),
+    storage_type: variants ? null : optionalText(input.storageType, 20),
     screen_size: num(input.screenSize),
     gpu: optionalText(input.gpu, 120),
     os: optionalText(input.os, 60),
@@ -192,11 +267,13 @@ export async function createProduct(input: ProductInput): Promise<CreateResult> 
     images,
     featured: Boolean(input.featured),
     is_active: true,
+    variants,
+    ram_options: ramOptions,
   });
 
   if (error) {
     console.error("create product:", error.message);
-    return { ok: false, error: "The product could not be saved. Please check the details and try again." };
+    return bad("The product could not be saved. Please check the details and try again.");
   }
 
   revalidatePath("/");

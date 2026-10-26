@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Laptop, ShoppingBag, Trash2 } from "lucide-react";
 import { whatsappLink } from "@/lib/site";
-import { formatNaira, isWholesaleQty, unitPrice } from "@/lib/product-utils";
+import { formatNaira, isWholesaleQty, unitPrice, variantLabel } from "@/lib/product-utils";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useCart } from "@/components/providers/CartProvider";
 import QtyStepper from "@/components/QtyStepper";
@@ -83,20 +83,19 @@ export default function CartView() {
   }
 
   const units = items.reduce((s, i) => s + i.quantity, 0);
-  const savings = items.reduce(
-    (s, i) => s + (i.product.retail_price - unitPrice(i.product, i.quantity)) * i.quantity,
-    0
-  );
+  const savings = items.reduce((s, i) => {
+    const retail = i.variant ? i.variant.retail_price : i.product.retail_price;
+    return s + (retail - unitPrice(i.product, i.quantity, i.variant)) * i.quantity;
+  }, 0);
 
   const waMessage = [
     "Hello Obravision, I would like to order these laptops:",
     "",
-    ...items.map(
-      (i) =>
-        `• ${i.product.name} x ${i.quantity} @ ${formatNaira(unitPrice(i.product, i.quantity))} = ${formatNaira(
-          unitPrice(i.product, i.quantity) * i.quantity
-        )}`
-    ),
+    ...items.map((i) => {
+      const unit = unitPrice(i.product, i.quantity, i.variant);
+      const name = i.variant ? `${i.product.name} (${variantLabel(i.variant)})` : i.product.name;
+      return `• ${name} x ${i.quantity} @ ${formatNaira(unit)} = ${formatNaira(unit * i.quantity)}`;
+    }),
     "",
     `Total: ${formatNaira(subtotal)}`,
   ].join("\n");
@@ -104,11 +103,13 @@ export default function CartView() {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_380px] lg:items-start">
       <ul className="space-y-4">
-        {items.map(({ id, quantity, product: p }) => {
-          const unit = unitPrice(p, quantity);
-          const wholesale = isWholesaleQty(p, quantity);
+        {items.map(({ id, quantity, product: p, variant }) => {
+          const unit = unitPrice(p, quantity, variant);
+          const wholesale = isWholesaleQty(p, quantity, variant);
+          const wholesalePrice = variant ? variant.wholesale_price : p.wholesale_price;
           const min = p.wholesale_min_qty ?? 5;
           const image = p.images[0];
+          const variantKey = variant?.id ?? "";
 
           return (
             <li key={id} className="flex gap-4 rounded-2xl border border-line bg-white p-4 sm:p-5">
@@ -128,6 +129,11 @@ export default function CartView() {
                 >
                   {p.name}
                 </Link>
+                {variant && (
+                  <p className="mt-1 inline-flex w-fit rounded-full bg-paper px-2.5 py-1 text-xs font-semibold text-ink/70">
+                    {variantLabel(variant)}
+                  </p>
+                )}
 
                 <p className="mt-1.5 text-sm text-ink/70">
                   {formatNaira(unit)} each
@@ -137,18 +143,18 @@ export default function CartView() {
                     </span>
                   )}
                 </p>
-                {!wholesale && p.wholesale_price !== null && (
+                {!wholesale && wholesalePrice !== null && (
                   <p className="mt-1 text-xs text-brand">
-                    Add {min - quantity} more to get the wholesale price of {formatNaira(p.wholesale_price)} each
+                    Add {min - quantity} more to get the wholesale price of {formatNaira(wholesalePrice)} each
                   </p>
                 )}
 
                 <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-3">
-                  <QtyStepper size="sm" value={quantity} onChange={(n) => setQuantity(p.id, n)} />
+                  <QtyStepper size="sm" value={quantity} onChange={(n) => setQuantity(p.id, variantKey, n)} />
                   <p className="text-base font-bold sm:text-lg">{formatNaira(unit * quantity)}</p>
                   <button
                     type="button"
-                    onClick={() => removeItem(p.id)}
+                    onClick={() => removeItem(p.id, variantKey)}
                     aria-label={`Remove ${p.name} from cart`}
                     className="grid h-10 w-10 place-items-center rounded-xl text-ink/50 transition hover:bg-red-50 hover:text-red-600"
                   >

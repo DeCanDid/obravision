@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { ArrowRight, CheckCircle2, Loader2, Lock, ShoppingBag, Store, Truck } from "lucide-react";
 import { fullAddress } from "@/lib/site";
-import { formatNaira, isWholesaleQty, unitPrice } from "@/lib/product-utils";
+import { formatNaira, isWholesaleQty, unitPrice, variantLabel } from "@/lib/product-utils";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useCart } from "@/components/providers/CartProvider";
 import StateCard from "@/components/ui/StateCard";
@@ -220,21 +220,24 @@ export default function CheckoutView() {
       <aside className="rounded-2xl border border-line bg-white p-6 lg:sticky lg:top-32">
         <h2 className="font-display text-xl font-semibold">Order summary</h2>
 
-        <ul className="mt-5 divide-y divide-line">
-                  {items.map(({ id, quantity, product: p }) => {
-                      const unit = unitPrice(p, quantity);
-                      return (
-                          <li key={id} className="flex justify-between gap-4 py-3 text-sm">
-                              <div className="min-w-0">
-                                  <p className="line-clamp-2 font-semibold">{p.name}</p>
-                                  <p className="mt-0.5 text-xs text-ink/60">
-                                      {quantity} × {formatNaira(unit)}
-                                      {isWholesaleQty(p, quantity) && <span className="ml-1.5 font-semibold text-gold-deep">Wholesale</span>}
-                                  </p>
-                              </div>
-                              <p className="shrink-0 font-bold">{formatNaira(unit * quantity)}</p>
-                          </li>
-                      );  
+                <ul className="mt-5 divide-y divide-line">
+          {items.map(({ id, quantity, product: p, variant }) => {
+            const unit = unitPrice(p, quantity, variant);
+            return (
+              <li key={id} className="flex justify-between gap-4 py-3 text-sm">
+                <div className="min-w-0">
+                  <p className="line-clamp-2 font-semibold">{p.name}</p>
+                  {variant && <p className="mt-0.5 text-xs font-semibold text-ink/60">{variantLabel(variant)}</p>}
+                  <p className="mt-0.5 text-xs text-ink/60">
+                    {quantity} × {formatNaira(unit)}
+                    {isWholesaleQty(p, quantity, variant) && (
+                      <span className="ml-1.5 font-semibold text-gold-deep">Wholesale</span>
+                    )}
+                  </p>
+                </div>
+                <p className="shrink-0 font-bold">{formatNaira(unit * quantity)}</p>
+              </li>
+            );
           })}
         </ul>
 

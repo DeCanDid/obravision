@@ -10,13 +10,16 @@ export type OrderEmailInput = {
   deliveryMethod: "pickup" | "delivery";
   deliveryAddress: string | null;
   notes: string | null;
-  items: { product_name: string; quantity: number; unit_price: number; line_total: number; is_wholesale: boolean }[];
+  items: { product_name: string; variant_label?: string | null; quantity: number; unit_price: number; line_total: number; is_wholesale: boolean }[];
   subtotal: number;
   totalUnits: number;
 };
 
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+const itemName = (i: { product_name: string; variant_label?: string | null }) =>
+  i.variant_label ? `${i.product_name} (${i.variant_label})` : i.product_name;
 
 export async function sendOrderEmail(o: OrderEmailInput) {
   const apiKey = process.env.MAILGUN_API_KEY;
@@ -45,7 +48,7 @@ export async function sendOrderEmail(o: OrderEmailInput) {
     "Items:",
     ...o.items.map(
       (i) =>
-        `- ${i.product_name} x ${i.quantity} @ ${formatNaira(i.unit_price)} = ${formatNaira(i.line_total)}${
+        `- ${itemName(i)} x ${i.quantity} @ ${formatNaira(i.unit_price)} = ${formatNaira(i.line_total)}${
           i.is_wholesale ? " (wholesale)" : ""
         }`
     ),
@@ -62,7 +65,7 @@ export async function sendOrderEmail(o: OrderEmailInput) {
   const rows = o.items
     .map(
       (i) => `<tr>
-        <td style="${cell}">${esc(i.product_name)}${
+        <td style="${cell}">${esc(itemName(i))}${
           i.is_wholesale ? ' <span style="color:#e89a0c;font-weight:600">(wholesale)</span>' : ""
         }</td>
         <td style="${cell}text-align:center">${i.quantity}</td>

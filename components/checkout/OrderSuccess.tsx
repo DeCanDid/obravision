@@ -17,6 +17,7 @@ type OrderItem = {
   unit_price: number;
   line_total: number;
   is_wholesale: boolean;
+  variant_label: string | null;
 };
 
 type Order = {
@@ -184,6 +185,7 @@ export default function OrderSuccess({ orderNumber }: { orderNumber: string }) {
             <li key={i.id} className="flex justify-between gap-4 py-3 text-sm">
               <div className="min-w-0">
                 <p className="font-semibold">{i.product_name}</p>
+                {i.variant_label && <p className="mt-0.5 text-xs font-semibold text-ink/60">{i.variant_label}</p>}
                 <p className="mt-0.5 text-xs text-ink/60">
                   {i.quantity} × {formatNaira(i.unit_price)}
                   {i.is_wholesale && <span className="ml-1.5 font-semibold text-gold-deep">Wholesale</span>}

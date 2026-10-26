@@ -7,15 +7,17 @@ import {
   type Product,
   conditionLabel,
   formatNaira,
+  formatPriceRange,
   productSpecLine,
   productWhatsAppMessage,
+  totalStock,
 } from "@/lib/product-utils";
 
 export default function ProductCard({ product }: { product: Product }) {
   const href = `/laptops/${product.slug}`;
   const image = product.images[0];
   const specs = productSpecLine(product);
-  const inStock = product.stock > 0;
+  const inStock = totalStock(product) > 0;
 
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-white transition duration-300 hover:-translate-y-1.5 hover:border-brand/40 hover:shadow-xl hover:shadow-brand/10">
@@ -56,7 +58,7 @@ export default function ProductCard({ product }: { product: Product }) {
         {specs && <p className="mt-2 line-clamp-1 text-xs text-ink/60">{specs}</p>}
 
         <div className="mt-4">
-          <p className="text-xl font-bold text-ink">{formatNaira(product.retail_price)}</p>
+          <p className="text-lg font-bold leading-tight text-ink sm:text-xl">{formatPriceRange(product)}</p>
           {product.wholesale_price && (
             <p className="mt-0.5 text-xs text-ink/60">
               Wholesale from{" "}

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { isWholesaleQty, unitPrice, type Product } from "@/lib/product-utils";
+import { findVariant, isWholesaleQty, unitPrice, variantLabel, type Product } from "@/lib/product-utils";
 import { generateOrderNumber } from "@/lib/order-number";
 import { isValidPhone } from "@/lib/phone";
 import { sendOrderEmail } from "@/lib/mailgun";
@@ -35,36 +35,51 @@ export async function POST(request: Request) {
   if (deliveryMethod === "delivery" && address.length < 8) return fail("Please enter your full delivery address.");
   if (notes.length > 500) return fail("Your note is too long. Please keep it under 500 characters.");
 
-  // 3. Rebuild the order from the saved cart, so prices cannot be tampered with
+    // 3. Rebuild the order from the saved cart, so prices cannot be tampered with
   const { data: rows, error: cartError } = await supabase
     .from("cart_items")
-    .select("quantity, product:products(*)")
+    .select("quantity, variant_id, product:products(*)")
     .eq("user_id", user.id);
 
   if (cartError) return fail("We could not read your cart. Please try again.", 500);
 
-  const lines = ((rows ?? []) as unknown as { quantity: number; product: Product | null }[])
+  const lines = ((rows ?? []) as unknown as { quantity: number; variant_id: string; product: Product | null }[])
     .filter((r) => r.product)
-    .map((r) => ({ product: r.product as Product, quantity: r.quantity }));
+    .map((r) => ({
+      product: r.product as Product,
+      quantity: r.quantity,
+      variantId: r.variant_id,
+      variant: findVariant(r.product as Product, r.variant_id),
+    }));
 
   if (lines.length === 0) return fail("Your cart is empty.");
 
-  const soldOut = lines.find((l) => l.product.stock <= 0);
+  const missing = lines.find((l) => l.variantId && !l.variant);
+  if (missing) {
+    return fail(
+      `A configuration of "${missing.product.name}" is no longer available. Please remove it from your cart and try again.`,
+      409
+    );
+  }
+
+  const soldOut = lines.find((l) => (l.variant ? l.variant.stock : l.product.stock) <= 0);
   if (soldOut) {
     return fail(`"${soldOut.product.name}" is now out of stock. Please remove it from your cart and try again.`, 409);
   }
 
-  const items = lines.map(({ product, quantity }) => {
-    const unit = unitPrice(product, quantity);
+  const items = lines.map(({ product, quantity, variant }) => {
+    const unit = unitPrice(product, quantity, variant);
     return {
       product_id: product.id,
       product_name: product.name,
+      variant_id: variant?.id ?? null,
+      variant_label: variant ? variantLabel(variant) : null,
       brand: product.brand,
       image: product.images[0] ?? null,
       unit_price: unit,
       quantity,
       line_total: unit * quantity,
-      is_wholesale: isWholesaleQty(product, quantity),
+      is_wholesale: isWholesaleQty(product, quantity, variant),
     };
   });
   const subtotal = items.reduce((s, i) => s + i.line_total, 0);

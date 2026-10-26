@@ -54,7 +54,7 @@ export async function searchProducts(f: ShopFilters) {
 
   if (f.brands.length) query = query.in("brand", f.brands);
   if (f.conditions.length) query = query.in("condition", f.conditions);
-  if (f.ram.length) query = query.in("ram_gb", f.ram);
+  if (f.ram.length) query = query.overlaps("ram_options", f.ram);
   if (f.max) query = query.lte("retail_price", f.max);
   if (f.wholesale) query = query.not("wholesale_price", "is", null);
 

@@ -10,7 +10,15 @@ import QtyStepper from "@/components/QtyStepper";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useCart } from "@/components/providers/CartProvider";
 import { site, whatsappLink } from "@/lib/site";
-import { type Product, formatNaira, isWholesaleQty, productSpecLine, unitPrice } from "@/lib/product-utils";
+import {
+  type Product,
+  findVariant,
+  formatNaira,
+  isWholesaleQty,
+  productSpecLine,
+  unitPrice,
+  variantLabel,
+} from "@/lib/product-utils";
 
 export default function ProductPurchase({ product }: { product: Product }) {
   const router = useRouter();
@@ -18,20 +26,32 @@ export default function ProductPurchase({ product }: { product: Product }) {
   const { user } = useAuth();
   const { addItem } = useCart();
 
-  const hasWholesale = product.wholesale_price !== null;
+  const variants = product.variants ?? [];
+  const hasConfigs = variants.length > 0;
+  const [variantId, setVariantId] = useState(variants[0]?.id ?? "");
+  const selected = hasConfigs ? findVariant(product, variantId) : null;
+
+  const wholesalePrice = selected ? selected.wholesale_price : product.wholesale_price;
+  const hasWholesale = wholesalePrice !== null;
   const minWholesale = product.wholesale_min_qty ?? 5;
-  const inStock = product.stock > 0;
+  const stock = selected ? selected.stock : product.stock;
+  const inStock = stock > 0;
 
   const [qty, setQty] = useState(1);
   const [status, setStatus] = useState<"idle" | "adding" | "added" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
 
-  const wholesale = isWholesaleQty(product, qty);
-  const unit = unitPrice(product, qty);
+  const wholesale = isWholesaleQty(product, qty, selected);
+  const unit = unitPrice(product, qty, selected);
   const total = unit * qty;
 
   function changeQty(n: number) {
     setQty(n);
+    setStatus("idle");
+  }
+
+  function chooseVariant(id: string) {
+    setVariantId(id);
     setStatus("idle");
   }
 
@@ -42,7 +62,7 @@ export default function ProductPurchase({ product }: { product: Product }) {
     }
     setStatus("adding");
     setError(null);
-    const result = await addItem(product, qty);
+    const result = await addItem(product, qty, selected?.id ?? "");
     if (result.ok) {
       setStatus("added");
     } else {
@@ -51,11 +71,12 @@ export default function ProductPurchase({ product }: { product: Product }) {
     }
   }
 
-  const specs = productSpecLine(product);
+  const specs = productSpecLine(product, selected);
   const message = [
     "Hello Obravision, I'm interested in this laptop:",
     "",
     product.name,
+    ...(selected ? [`Configuration: ${variantLabel(selected)}`] : []),
     ...(specs ? [specs] : []),
     `Buying type: ${wholesale ? "Wholesale" : "Retail"}`,
     `Quantity: ${qty}`,
@@ -66,12 +87,47 @@ export default function ProductPurchase({ product }: { product: Product }) {
 
   return (
     <div>
+      {hasConfigs && (
+        <div className="mb-6">
+          <p className="mb-2 text-sm font-bold text-ink">Choose configuration</p>
+          <div role="radiogroup" aria-label="Laptop configuration" className="grid gap-3 sm:grid-cols-2">
+            {variants.map((v) => {
+              const active = v.id === variantId;
+              return (
+                <label
+                  key={v.id}
+                  className={clsx(
+                    "cursor-pointer rounded-xl border-2 p-4 transition",
+                    active ? "border-brand bg-brand/5 shadow-md shadow-brand/10" : "border-line hover:border-brand/40",
+                    v.stock <= 0 && "opacity-60"
+                  )}
+                >
+                  <input
+                    type="radio"
+                    name="configuration"
+                    value={v.id}
+                    checked={active}
+                    onChange={() => chooseVariant(v.id)}
+                    className="sr-only"
+                  />
+                  <span className="block text-sm font-bold">{variantLabel(v)}</span>
+                  <span className="mt-1 block text-lg font-bold text-brand">{formatNaira(v.retail_price)}</span>
+                  <span className="mt-0.5 block text-xs text-ink/55">
+                    {v.stock > 0 ? "In stock" : "Out of stock"}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="rounded-2xl bg-gradient-to-br from-ink via-ink-soft to-brand-deep p-6 text-white">
         <p className="text-xs font-bold uppercase tracking-wider text-white/60">
           {wholesale ? "Wholesale price per unit" : "Price per unit"}
         </p>
         <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
-          <p key={unit} className="animate-fade-in text-4xl font-bold">
+          <p key={`${variantId}-${unit}`} className="animate-fade-in text-4xl font-bold">
             {formatNaira(unit)}
           </p>
           {qty > 1 && (
@@ -106,7 +162,7 @@ export default function ProductPurchase({ product }: { product: Product }) {
           </div>
           {!wholesale && (
             <p className="mt-2 text-xs text-brand">
-              Order {minWholesale} or more to unlock the wholesale price of {formatNaira(product.wholesale_price!)} per unit.
+              Order {minWholesale} or more to unlock the wholesale price of {formatNaira(wholesalePrice!)} per unit.
             </p>
           )}
         </div>
