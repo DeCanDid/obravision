@@ -2,22 +2,32 @@ import Link from "next/link";
 import { ExternalLink, Laptop, LogOut } from "lucide-react";
 import { isAdmin } from "@/lib/admin-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { formatNaira } from "@/lib/product-utils";
 import { site } from "@/lib/site";
 import { logoutAction } from "@/app/admin/actions";
 import LoginForm from "@/components/admin/LoginForm";
 import AddProductForm from "@/components/admin/AddProductForm";
+import ProductList, { type AdminProduct } from "@/components/admin/ProductList";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
   if (!(await isAdmin())) return <LoginForm />;
 
-  const { data: recent } = await createAdminClient()
+  const { data } = await createAdminClient()
     .from("products")
-    .select("id, slug, name, brand, retail_price, stock, created_at")
+    .select("id, slug, name, brand, retail_price, stock, images")
     .order("created_at", { ascending: false })
-    .limit(8);
+    .limit(300);
+
+  const products: AdminProduct[] = (data ?? []).map((p) => ({
+    id: p.id,
+    slug: p.slug,
+    name: p.name,
+    brand: p.brand,
+    retail_price: Number(p.retail_price),
+    stock: p.stock,
+    image: (p.images as string[] | null)?.[0] ?? null,
+  }));
 
   return (
     <>
@@ -59,26 +69,7 @@ export default async function AdminPage() {
 
         <AddProductForm />
 
-        {recent && recent.length > 0 && (
-          <section className="rounded-2xl border border-line bg-white p-6 sm:p-8">
-            <h2 className="font-display text-xl font-semibold">Recently added</h2>
-            <ul className="mt-4 divide-y divide-line">
-              {recent.map((p) => (
-                <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm">
-                  <div className="min-w-0">
-                    <p className="line-clamp-1 font-semibold">{p.name}</p>
-                    <p className="text-xs text-ink/55">
-                      {p.brand} &middot; {formatNaira(Number(p.retail_price))} &middot; {p.stock} in stock
-                    </p>
-                  </div>
-                  <Link href={`/laptops/${p.slug}`} target="_blank" className="font-semibold text-brand hover:underline">
-                    View
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
+        <ProductList products={products} />
       </main>
     </>
   );

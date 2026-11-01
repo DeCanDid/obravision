@@ -6,6 +6,7 @@ import { CheckCircle2, ImagePlus, Loader2, Plus, Star, Trash2, X } from "lucide-
 import { createClient } from "@/lib/supabase/client";
 import { site } from "@/lib/site";
 import { createProduct, getUploadTargets } from "@/app/admin/actions";
+import { useRouter } from "next/navigation";
 
 type Pic = { id: string; file: File; preview: string };
 
@@ -103,6 +104,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 export default function AddProductForm() {
+  const router = useRouter();
   const [form, setForm] = useState(initial);
   const [useVariants, setUseVariants] = useState(false);
   const [rows, setRows] = useState<VariantRow[]>([]);
@@ -220,6 +222,7 @@ export default function AddProductForm() {
       setUseVariants(false);
       setRows([]);
       window.scrollTo({ top: 0, behavior: "smooth" });
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {

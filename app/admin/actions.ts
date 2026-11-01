@@ -282,3 +282,40 @@ export async function createProduct(input: ProductInput): Promise<CreateResult> 
 
   return { ok: true, slug };
 }
+
+// delete functionalities
+
+/* ---------- Delete product ---------- */
+
+export async function deleteProduct(id: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!(await isAdmin())) return { ok: false, error: NOT_ALLOWED };
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return { ok: false, error: "Invalid product." };
+
+  const admin = createAdminClient();
+
+  const { data: product } = await admin.from("products").select("id, slug, images").eq("id", id).maybeSingle();
+  if (!product) return { ok: false, error: "That laptop could not be found. It may already be deleted." };
+
+  const { error } = await admin.from("products").delete().eq("id", id);
+  if (error) {
+    console.error("delete product:", error.message);
+    return { ok: false, error: "The laptop could not be deleted. Please try again." };
+  }
+
+  // Remove the uploaded photos from storage (photos from other sites are skipped)
+  const marker = `/storage/v1/object/public/${BUCKET}/`;
+  const paths = ((product.images as string[]) ?? [])
+    .map((url) => {
+      const i = url.indexOf(marker);
+      return i === -1 ? null : decodeURIComponent(url.slice(i + marker.length));
+    })
+    .filter((p): p is string => Boolean(p));
+  if (paths.length > 0) await admin.storage.from(BUCKET).remove(paths);
+
+  revalidatePath("/");
+  revalidatePath("/laptops");
+  revalidatePath(`/laptops/${product.slug}`);
+  revalidatePath("/sitemap.xml");
+
+  return { ok: true };
+}

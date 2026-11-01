@@ -21,8 +21,10 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-const HERO_IMAGE =
-  "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=2000&q=80";
+// const HERO_IMAGE =
+//   "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=2000&q=80";
+
+const HERO_IMAGE = "/hero.png";
 
 const why = [
   {
@@ -77,12 +79,14 @@ export default async function HomePage() {
           sizes="100vw"
           className="-z-20 object-cover opacity-50"
         />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-ink via-ink/80 to-brand/50" />
-        <div className="absolute -left-24 top-10 -z-10 h-72 w-72 animate-float rounded-full bg-brand/40 blur-3xl" />
-        <div
+        <div className="absolute inset-0 -z-10 bg-ink/30" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-ink/90 via-ink/70 to-ink/40 sm:via-ink/55 sm:to-transparent" />
+{/* <div className="absolute inset-x-0 bottom-0 -z-10 h-40 bg-gradient-to-t from-ink/70 to-transparent" /> */}
+        {/* <div className="absolute -left-24 top-10 -z-10 h-72 w-72 animate-float rounded-full bg-brand/40 blur-3xl" /> */}
+        {/* <div
           className="absolute -bottom-20 right-10 -z-10 h-80 w-80 animate-float rounded-full bg-gold/25 blur-3xl"
           style={{ animationDelay: "-4s" }}
-        />
+        /> */}
 
         <div className="mx-auto max-w-7xl px-4 pb-40 pt-16 sm:px-6 sm:pb-44 sm:pt-24 lg:pb-52 lg:pt-28">
           <div className="max-w-2xl">
