@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { findVariant, isWholesaleQty, unitPrice, variantLabel, type Product } from "@/lib/product-utils";
 import { generateOrderNumber } from "@/lib/order-number";
 import { isValidPhone } from "@/lib/phone";
-import { sendOrderEmail } from "@/lib/mailgun";
+import { sendCustomerOrderEmail, sendOrderEmail } from "@/lib/mailgun";
 
 const fail = (error: string, status = 400) => NextResponse.json({ error }, { status });
 
@@ -128,25 +128,35 @@ export async function POST(request: Request) {
   // 5. Empty the cart
   await supabase.from("cart_items").delete().eq("user_id", user.id);
 
+
   // 6. Email the shop owner (a failed email never loses the order)
+    
+  const emailPayload = {
+    orderNumber: order.order_number,
+    customerName: name,
+    customerEmail: user.email,
+    customerPhone: phone,
+    deliveryMethod,
+    deliveryAddress: deliveryMethod === "delivery" ? address : null,
+    notes: notes || null,
+    items,
+    subtotal,
+    totalUnits,
+  } as const;
+
   let notified = false;
   try {
-    await sendOrderEmail({
-      orderNumber: order.order_number,
-      customerName: name,
-      customerEmail: user.email,
-      customerPhone: phone,
-      deliveryMethod,
-      deliveryAddress: deliveryMethod === "delivery" ? address : null,
-      notes: notes || null,
-      items,
-      subtotal,
-      totalUnits,
-    });
+    await sendOrderEmail(emailPayload);
     notified = true;
     await admin.from("orders").update({ owner_notified: true }).eq("id", order.id);
   } catch (err) {
-    console.error("Mailgun:", err);
+    console.error("Mailgun owner email:", err);
+  }
+
+  try {
+    await sendCustomerOrderEmail(emailPayload);
+  } catch (err) {
+    console.error("Mailgun customer email:", err);
   }
 
   return NextResponse.json({ orderNumber: order.order_number, notified });

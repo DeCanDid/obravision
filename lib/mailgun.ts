@@ -108,6 +108,7 @@ export async function sendOrderEmail(o: OrderEmailInput) {
   form.set("text", text);
   form.set("html", html);
   form.set("h:Reply-To", o.customerEmail);
+  form.set("o:tracking", "no");
 
   const res = await fetch(`${base}/v3/${domain}/messages`, {
     method: "POST",
@@ -171,6 +172,132 @@ export async function sendContactEmail(m: {
   form.set("text", text);
   form.set("html", html);
   form.set("h:Reply-To", m.email);
+  form.set("o:tracking", "no");
+
+  const res = await fetch(`${base}/v3/${domain}/messages`, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${Buffer.from(`api:${apiKey}`).toString("base64")}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: form,
+  });
+
+  if (!res.ok) throw new Error(`Mailgun ${res.status}: ${await res.text()}`);
+}
+
+export async function sendCustomerOrderEmail(o: OrderEmailInput) {
+  const apiKey = process.env.MAILGUN_API_KEY;
+  const domain = process.env.MAILGUN_DOMAIN;
+  if (!apiKey || !domain) throw new Error("Mailgun environment variables are missing");
+
+  const base = process.env.MAILGUN_API_URL ?? "https://api.mailgun.net";
+  const from = process.env.MAILGUN_FROM || `${site.name} <postmaster@${domain}>`;
+  const chatLink = whatsappLink(`Hello ${site.name}, I have placed order ${o.orderNumber}.`);
+  const firstName = o.customerName.split(" ")[0];
+  const hasBank = Boolean(site.payment.accountNumber);
+
+  const bankText = hasBank
+    ? [
+        "",
+        "Payment details:",
+        `Bank: ${site.payment.bankName}`,
+        `Account name: ${site.payment.accountName}`,
+        `Account number: ${site.payment.accountNumber}`,
+        `Amount: ${formatNaira(o.subtotal)}`,
+      ]
+    : [];
+
+  const text = [
+    `Hello ${firstName},`,
+    "",
+    `Thank you for your order with ${site.name}. We have received it and will contact you shortly to confirm availability.`,
+    "",
+    `Order number: ${o.orderNumber}`,
+    "",
+    "Your items:",
+    ...o.items.map(
+      (i) => `- ${itemName(i)} x ${i.quantity} = ${formatNaira(i.line_total)}${i.is_wholesale ? " (wholesale)" : ""}`
+    ),
+    "",
+    `Total: ${formatNaira(o.subtotal)}`,
+    o.deliveryMethod === "pickup" ? "Pick-up: in store" : `Delivery to: ${o.deliveryAddress ?? ""}`,
+    ...bankText,
+    "",
+    "Next steps:",
+    "1. We will confirm your order and share payment details on WhatsApp.",
+    "2. Make your payment.",
+    "3. Send your payment receipt to us on WhatsApp.",
+    "",
+    `WhatsApp: ${site.phone.display} (${chatLink})`,
+    `Phone: ${site.phone.display}`,
+    `Email: ${site.email}`,
+  ].join("\n");
+
+  const cell = "padding:10px 8px;border-bottom:1px solid #e5e9f2;";
+  const rows = o.items
+    .map(
+      (i) => `<tr>
+        <td style="${cell}">${esc(itemName(i))}${
+          i.is_wholesale ? ' <span style="color:#e89a0c;font-weight:600">(wholesale)</span>' : ""
+        }</td>
+        <td style="${cell}text-align:center">${i.quantity}</td>
+        <td style="${cell}text-align:right;font-weight:600">${formatNaira(i.line_total)}</td>
+      </tr>`
+    )
+    .join("");
+
+  const bankHtml = hasBank
+    ? `<div style="margin-top:20px;padding:16px;background:#f3f7ff;border-radius:12px">
+        <p style="margin:0 0 6px;font-weight:bold">Payment details</p>
+        <p style="margin:0">Bank: ${esc(site.payment.bankName)}<br>
+        Account name: ${esc(site.payment.accountName)}<br>
+        Account number: <strong>${esc(site.payment.accountNumber)}</strong><br>
+        Amount: <strong>${formatNaira(o.subtotal)}</strong></p>
+      </div>`
+    : "";
+
+  const html = `<div style="font-family:Arial,Helvetica,sans-serif;background:#f3f7ff;padding:24px">
+    <div style="max-width:620px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #dfe6f5">
+      <div style="background:#0a1633;color:#fff;padding:24px">
+        <p style="margin:0;font-size:12px;letter-spacing:2px;color:#ffb627;text-transform:uppercase">${esc(site.name)}</p>
+        <h1 style="margin:8px 0 0;font-size:22px">We received your order</h1>
+      </div>
+      <div style="padding:24px;color:#0a1633;font-size:14px;line-height:1.6">
+        <p style="margin:0">Hello ${esc(firstName)},</p>
+        <p style="margin:8px 0 0">Thank you for your order. We will contact you shortly to confirm availability.</p>
+        <p style="margin:16px 0 0;padding:12px 16px;background:#f3f7ff;border-radius:10px">Order number: <strong>${esc(o.orderNumber)}</strong></p>
+        <table style="width:100%;border-collapse:collapse;margin-top:16px;font-size:14px">
+          <thead><tr style="text-align:left;color:#5b6784;font-size:12px">
+            <th style="padding:8px 8px 8px 0">Laptop</th><th style="text-align:center">Qty</th><th style="text-align:right">Total</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <p style="text-align:right;margin:14px 0 0;font-size:16px">Total <strong>${formatNaira(o.subtotal)}</strong></p>
+        <p style="margin:6px 0 0;color:#5b6784">${
+          o.deliveryMethod === "pickup" ? "Pick-up in store" : `Delivery to: ${esc(o.deliveryAddress ?? "")}`
+        }</p>
+        ${bankHtml}
+        <p style="margin:24px 0 6px;font-weight:bold">What happens next</p>
+        <ol style="margin:0;padding-left:20px">
+          <li>We confirm your order and share payment details on WhatsApp.</li>
+          <li>You make your payment.</li>
+          <li>You send your payment receipt to us on WhatsApp.</li>
+        </ol>
+        <p style="margin:24px 0 0"><a href="${chatLink}" style="display:inline-block;background:#1faa59;color:#fff;text-decoration:none;font-weight:bold;padding:12px 22px;border-radius:999px">Message us on WhatsApp</a></p>
+        <p style="margin:20px 0 0;font-size:12px;color:#5b6784">${esc(site.name)} &middot; ${esc(site.phone.display)} &middot; ${esc(site.email)}</p>
+      </div>
+    </div>
+  </div>`;
+
+  const form = new URLSearchParams();
+  form.set("from", from);
+  form.set("to", o.customerEmail);
+  form.set("subject", `We received your order ${o.orderNumber}`);
+  form.set("text", text);
+  form.set("html", html);
+  form.set("h:Reply-To", site.email);
+  form.set("o:tracking", "no");
 
   const res = await fetch(`${base}/v3/${domain}/messages`, {
     method: "POST",
