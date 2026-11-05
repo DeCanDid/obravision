@@ -3,6 +3,7 @@ import { BadgeCheck, Boxes, Headset, Laptop, Mail, MapPin, Phone, Store } from "
 import { fullAddress, mapsLink, site, whatsappLink } from "@/lib/site";
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
 import Image from "next/image";
+import { policies } from "@/lib/policies";
 
 const trust = [
   { icon: BadgeCheck, title: "Trusted brands", text: "HP, Dell, ASUS, Apple, Microsoft and Samsung" },
@@ -146,6 +147,18 @@ export default function Footer() {
             </li>
           </ul>
         </address>
+      </div>
+
+      <div className="border-t border-white/10">
+        <ul className="mx-auto flex max-w-7xl flex-wrap gap-x-6 gap-y-2 px-4 py-4 text-xs sm:px-6">
+          {policies.map((policy) => (
+            <li key={policy.slug}>
+              <Link href={`/policies/${policy.slug}`} className="transition-colors hover:text-gold">
+                {policy.title}
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
 
       {/* Bottom bar */}

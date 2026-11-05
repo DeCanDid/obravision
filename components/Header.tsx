@@ -103,9 +103,9 @@ export default function Header() {
                   href={item.href}
                   aria-current={isActive(item.href) ? "page" : undefined}
                   className={clsx(
-                    "relative rounded-md px-4 py-2 text-sm font-medium transition-colors",
+                    "relative rounded-md px-3 py-2 text-sm font-medium transition-colors xl:px-4",
                     isActive(item.href)
-                      ? "text-ink after:absolute after:inset-x-4 after:-bottom-0.5 after:h-0.5 after:rounded-full after:bg-gold"
+                      ? "text-ink after:absolute after:inset-x-3 after:-bottom-0.5 after:h-0.5 after:rounded-full after:bg-gold xl:after:inset-x-4"
                       : "text-ink/70 hover:text-ink"
                   )}
                 >

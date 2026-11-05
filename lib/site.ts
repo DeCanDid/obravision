@@ -19,6 +19,7 @@ export const site = {
     { label: "About Us", href: "/about" },
     { label: "Laptops", href: "/laptops" },
     { label: "Contact", href: "/contact" },
+    { label: "Policies", href: "/policies" },
   ],
   payment: {
     bankName: "Moniepoint",

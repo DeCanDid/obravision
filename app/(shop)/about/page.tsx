@@ -1,91 +1,111 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, ChevronRight, ClipboardList, HandCoins, Headset, MapPin, ShieldCheck, ShoppingCart, Wallet } from "lucide-react";
-import { fullAddress, site, whatsappLink } from "@/lib/site";
+import {
+  ArrowRight,
+  BadgeCheck,
+  BatteryCharging,
+  Building2,
+  Check,
+  ChevronRight,
+  Clock,
+  Cpu,
+  ExternalLink,
+  FileBadge,
+  FileText,
+  HandCoins,
+  Headset,
+  Keyboard,
+  Mail,
+  MapPin,
+  Phone,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  Store,
+  Truck,
+} from "lucide-react";
+import { fullAddress, mapsLink, site, whatsappLink } from "@/lib/site";
+import { company, obracompany } from "@/lib/policies";
 import Reveal from "@/components/Reveal";
 import SectionHeading from "@/components/SectionHeading";
+import RichText from "@/components/policies/RichText";
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
 
 export const metadata: Metadata = {
-  title: "About Us – Laptop Store in Victoria Island, Lagos",
+  title: "About Us – Quality-Tested Laptops in Victoria Island, Lagos",
   description:
-    "Obravision is a laptop store at Tele Plaza, Victoria Island, Lagos. We sell HP, Dell, ASUS, Apple, Microsoft and Samsung laptops to individuals, schools and businesses, at retail and wholesale prices.",
+    "Learn about Obravision Limited, a Lagos laptop store offering carefully selected, tested pre-owned laptops from top brands, with quality checks, warranty coverage and nationwide delivery.",
   alternates: { canonical: "/about" },
 };
 
-const brandNotes: Record<string, string> = {
-  HP: "Reliable laptops for office work, school and business, from everyday models to professional ranges.",
-  Dell: "Well-built laptops known for durability and steady performance in business settings.",
-  ASUS: "Good-value laptops with modern designs, popular with students and home users.",
-  Apple: "MacBooks with smooth performance, long battery life and a premium finish.",
-  Microsoft: "Surface laptops with sharp touchscreens and a slim, premium design.",
-  Samsung: "Stylish, lightweight laptops with vivid displays that pair well with other Samsung devices.",
-};
+const brandList = `${site.brands.slice(0, -1).join(", ")} and ${site.brands[site.brands.length - 1]}`;
 
-const values = [
-  {
-    icon: ClipboardList,
-    title: "Clear information",
-    text: "Every laptop page lists its processor, memory, storage, display and condition, so you know exactly what you are buying before you pay.",
-  },
-  {
-    icon: HandCoins,
-    title: "Fair retail and wholesale pricing",
-    text: "Prices are shown in naira. Buy one laptop at the retail price, or order the minimum quantity shown on a product to get the lower wholesale price per unit.",
-  },
-  {
-    icon: Headset,
-    title: "Real people on WhatsApp",
-    text: "Not sure which laptop suits you? Message us with your budget and what you will use it for, and we will point you to the right options.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "A store you can visit",
-    text: "We are based at Tele Plaza on Saka Tinubu Street in Victoria Island, so you can see us in person instead of buying from a stranger online.",
-  },
+const qualityChecks = [
+  { icon: Keyboard, text: "Hardware functionality, including keyboard, trackpad, ports and display" },
+  { icon: BatteryCharging, text: "Battery performance and charging stability" },
+  { icon: Cpu, text: "Processor, RAM and storage performance" },
+  { icon: RefreshCw, text: "System optimization and software updates" },
+  { icon: Search, text: "Physical condition and durability checks" },
 ];
 
-const steps = [
-  { icon: ShoppingCart, title: "Choose your laptops", text: "Browse by brand, condition, memory or budget, then add the laptops you want to your cart." },
-  { icon: ClipboardList, title: "Place your order", text: "Check out with your name and phone number. We are notified as soon as your order comes in." },
-  { icon: Wallet, title: "Pay and send your receipt", text: "We share our payment details on WhatsApp. Pay, then send your receipt to the same chat." },
-  { icon: HandCoins, title: "Collect or arrange delivery", text: "Pick up your laptops at our Victoria Island store, or ask us about delivery to your address." },
+const trustPoints = [
+  { icon: FileText, title: "Transparent product descriptions" },
+  { icon: BadgeCheck, title: "Tested and verified devices" },
+  { icon: HandCoins, title: "Fair pricing" },
+  { icon: ShieldCheck, title: "Warranty coverage" },
+  { icon: Headset, title: "Responsive customer support" },
+  { icon: Truck, title: "Nationwide delivery" },
 ];
 
-const faqs = [
-  {
-    q: "Do you sell laptops wholesale?",
-    a: "Yes. Many of our laptops have a wholesale price that applies when you order the minimum quantity shown on the product page. For larger orders, message us on WhatsApp for a quote.",
-  },
-  {
-    q: "Where is the Obravision store located?",
-    a: `We are at ${fullAddress}. Message us before you visit so we can confirm the laptop you want is ready.`,
-  },
-  {
-    q: "Do I need an account to buy?",
-    a: "You can browse every laptop and message us on WhatsApp without an account. To add laptops to a cart and place an order on the website, you need a free account so your cart is saved.",
-  },
-  {
-    q: "How do I pay for my order?",
-    a: "After you place your order, we share our payment details on WhatsApp. Once you have paid, send your receipt to the same chat so we can confirm your order.",
-  },
-  {
-    q: "Which laptop brands do you sell?",
-    a: `We sell ${site.brands.slice(0, -1).join(", ")} and ${site.brands[site.brands.length - 1]} laptops.`,
-  },
-  {
-    q: "Can you deliver my order?",
-    a: "You can choose delivery at checkout. We confirm the delivery cost and timing with you on WhatsApp before anything is sent.",
-  },
+const commitments = [
+  "Honest and transparent business practices",
+  "Clear communication with our customers",
+  "Reliable after-sales support",
+  "Secure and convenient shopping experiences",
+];
+
+const places = [
+  { icon: Store, title: "Lagos", text: `Our store at Tele Plaza, ${site.address.area}.` },
+  { icon: MapPin, title: "Abuja", text: "Pickup centre for customers in Abuja." },
+  { icon: MapPin, title: "Port Harcourt", text: "Pickup centre for customers in Port Harcourt." },
+  { icon: Truck, title: "Everywhere else", text: "Safe delivery to customers across Nigeria." },
 ];
 
 export default function AboutPage() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    name: `About ${site.name}`,
+    url: `${site.url}/about`,
+    about: {
+      "@type": "Organization",
+      name: site.name,
+      url: site.url,
+      telephone: site.phone.tel,
+      email: site.email,
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: site.address.street,
+        addressLocality: site.address.area,
+        addressRegion: site.address.city,
+        addressCountry: site.address.country,
+      },
+    },
+  };
+
+  const link = "underline-offset-4 transition hover:text-gold hover:underline";
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+
       {/* Banner */}
       <section className="relative overflow-hidden bg-gradient-to-br from-ink via-ink-soft to-brand-deep">
         <div className="absolute -left-20 top-0 h-72 w-72 animate-float rounded-full bg-brand/40 blur-3xl" />
-        <div className="absolute -bottom-16 right-10 h-72 w-72 animate-float rounded-full bg-gold/20 blur-3xl" style={{ animationDelay: "-4s" }} />
+        <div
+          className="absolute -bottom-16 right-10 h-72 w-72 animate-float rounded-full bg-gold/20 blur-3xl"
+          style={{ animationDelay: "-4s" }}
+        />
         <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20">
           <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm text-white/60">
             <Link href="/" className="transition hover:text-gold">Home</Link>
@@ -93,52 +113,52 @@ export default function AboutPage() {
             <span className="text-white">About us</span>
           </nav>
           <h1 className="mt-4 max-w-3xl animate-fade-up font-display text-4xl font-semibold leading-[1.1] tracking-tight text-white sm:text-5xl">
-            Your Trusted Laptop Store in{" "}
-            <span className="bg-gradient-to-r from-gold to-amber-300 bg-clip-text text-transparent">Victoria Island, Lagos</span>
+            About{" "}
+            <span className="bg-gradient-to-r from-gold to-amber-300 bg-clip-text text-transparent">{site.name}</span>
           </h1>
-          <p className="mt-5 max-w-2xl animate-fade-up text-base leading-relaxed text-white/80 sm:text-lg" style={{ animationDelay: "120ms" }}>
-            {site.name} sells laptops to individuals, students, professionals, schools and businesses.
-            Whether you need one laptop for yourself or a batch for your team, we help you find the right
-            machine at a fair price, with clear specs and honest advice.
+          <p
+            className="mt-5 max-w-2xl animate-fade-up text-base leading-relaxed text-white/80 sm:text-lg"
+            style={{ animationDelay: "120ms" }}
+          >
+            Learn who we are, what we do, and our commitment to quality. We bring carefully selected, tested
+            laptops to tech enthusiasts, professionals, students and everyday users across Nigeria.
           </p>
         </div>
       </section>
 
       {/* Who we are */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
-        <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
+        <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:items-start">
           <Reveal>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">Who we are</p>
             <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-              A laptop store built around easy, honest buying
+              Powerful laptops, without the new-device price
             </h2>
             <div className="mt-5 space-y-4 leading-relaxed text-ink/70">
               <p>
-                {site.name} is a laptop store at Tele Plaza, Unit A19, 5 Saka Tinubu Street, Victoria
-                Island, Lagos. We stock laptops from {site.brands.slice(0, -1).join(", ")} and{" "}
-                {site.brands[site.brands.length - 1]}, from dependable everyday machines to powerful
-                business laptops.
+                {company.name} is a registered Nigerian company <b> (CAC registration number:{" "}
+                <RichText text={company.cac} />) </b> created to solve simple consumer problems. One such problem
+                is that many people need powerful laptops, but new devices are becoming increasingly
+                expensive. We bridge that gap by offering carefully selected pre-owned laptops from top global
+                brands. Every device we sell is chosen for durability, performance and long-term value.
               </p>
               <p>
-                Buying a laptop is a big decision, and it should not be confusing. That is why every
-                laptop on our website shows its full specifications and condition, why prices are listed
-                openly in naira, and why you can message us on WhatsApp at any point to ask a question
-                before you buy.
+                Our team is made up of experienced technicians and technology enthusiasts who understand what
+                makes a laptop dependable. We combine technical expertise with a commitment to customer
+                satisfaction, ensuring every buyer receives a device they can trust.
               </p>
               <p>
-                We serve two kinds of customers. If you need a single laptop for work, school or home,
-                you can buy one unit at the retail price. If you are equipping an office, a school or a
-                resale business, our wholesale prices reward you for ordering in bulk.
+                We are poised to sell products that combine reliable performance, great design, and practical
+                functionality, serving tech enthusiasts, professionals, students, and everyday users across
+                Nigeria.
               </p>
             </div>
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-              <Link href="/laptops" className="group inline-flex items-center justify-center gap-2 rounded-full bg-brand px-7 py-3.5 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-brand-deep">
-                Browse our laptops <ArrowRight size={16} className="transition group-hover:translate-x-1" />
-              </Link>
-              <Link href="/contact" className="inline-flex items-center justify-center rounded-full border border-ink px-7 py-3.5 text-sm font-bold transition hover:bg-ink hover:text-white">
-                Contact us
-              </Link>
-            </div>
+
+            <p className="mt-6 rounded-2xl border border-line bg-paper p-5 text-sm leading-relaxed text-ink/65">
+              Please note that {site.name} is an independent reseller and is not affiliated with{" "}
+              {brandList}. All trademarks belong to their respective owners. {site.name} is a trading name of{" "}
+              {company.name}.
+            </p>
           </Reveal>
 
           <Reveal delay={100}>
@@ -146,15 +166,17 @@ export default function AboutPage() {
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">At a glance</p>
               <dl className="mt-6 space-y-5 text-sm">
                 {[
-                  ["Store", site.name],
-                  ["Location", fullAddress],
-                  ["Brands", site.brands.join(", ")],
-                  ["Buy as", "A single unit (retail) or in bulk (wholesale)"],
-                  ["Order support", `WhatsApp and phone: ${site.phone.display}`],
+                  ["Company", company.name],
+                  ["CAC registration number", company.cac],
+                  ["Store", `${fullAddress}, Nigeria`],
+                  ["Service area", "Lagos store, pickup centres in Abuja and Port Harcourt, delivery across Nigeria"],
+                  ["Business hours", company.hours],
                 ].map(([label, value]) => (
                   <div key={label} className="border-b border-white/10 pb-4 last:border-0 last:pb-0">
                     <dt className="text-xs uppercase tracking-wider text-white/50">{label}</dt>
-                    <dd className="mt-1 font-semibold leading-relaxed">{value}</dd>
+                    <dd className="mt-1 font-semibold leading-relaxed">
+                      <RichText text={value} />
+                    </dd>
                   </div>
                 ))}
               </dl>
@@ -163,136 +185,339 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Brands */}
+      {/* What we do */}
       <section className="bg-paper py-16 sm:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6">
           <Reveal>
             <SectionHeading
-              eyebrow="What we sell"
-              title="Laptops from Six Leading Brands"
-              text="Pick a brand to see every matching laptop in our store, with full specs and prices."
+              eyebrow="What we do"
+              title="Our dedication to quality and customer trust"
             />
           </Reveal>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {site.brands.map((brand, i) => (
-              <Reveal key={brand} delay={i * 60} className="h-full">
-                <Link
-                  href={`/laptops?brand=${encodeURIComponent(brand)}`}
-                  className="group flex h-full flex-col rounded-2xl border border-line bg-white p-6 transition duration-300 hover:-translate-y-1 hover:border-brand/40 hover:shadow-lg hover:shadow-brand/10"
-                >
-                  <h3 className="font-display text-2xl font-semibold transition group-hover:text-brand">{brand} laptops</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-ink/65">{brandNotes[brand] ?? `Shop ${brand} laptops at ${site.name}.`}</p>
-                  <span className="mt-auto inline-flex items-center gap-1.5 pt-4 text-sm font-bold text-brand">
-                    Shop {brand} <ArrowRight size={15} className="transition group-hover:translate-x-1" />
-                  </span>
-                </Link>
-              </Reveal>
-            ))}
-          </div>
+          <Reveal delay={80}>
+            <div className="mt-8 space-y-4 rounded-3xl border border-line bg-white p-6 leading-relaxed text-ink/70 sm:p-10">
+              <p>
+                {obracompany.name} operates as a direct-to-consumer (DTC) brand through both our online store and
+                physical retail location, as well as through selected reseller partnerships. We carefully
+                source products from trusted brands, with a strong focus on durability, usability, and value.
+              </p>
+              <p>
+                We source, test and supply pre-owned laptops from brands such as {brandList}. Each laptop goes
+                through a structured evaluation process that includes hardware checks, battery health
+                assessment and software optimization. This ensures that every device is ready for work,
+                school, business or everyday use the moment it reaches you.
+              </p>
+              <p>
+                We are committed to providing customers with honest information, dependable service, and
+                quality technology they can trust.
+              </p>
+
+              <div className="flex flex-wrap gap-2 pt-2">
+                {site.brands.map((brand) => (
+                  <Link
+                    key={brand}
+                    href={`/laptops?brand=${encodeURIComponent(brand)}`}
+                    className="rounded-full bg-paper px-4 py-2 text-sm font-semibold text-ink/75 ring-1 ring-line transition hover:bg-brand hover:text-white hover:ring-brand"
+                  >
+                    {brand} laptops
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </Reveal>
         </div>
       </section>
 
-      {/* Values */}
+      {/* Quality assurance */}
+      <section className="bg-gradient-to-br from-ink via-ink-soft to-brand-deep py-16 text-white sm:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <Reveal>
+            <p className="text-center text-xs font-bold uppercase tracking-[0.18em] text-gold">Quality assurance</p>
+            <h2 className="mx-auto mt-3 max-w-2xl text-center font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+              Our Quality Assurance Process
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-center leading-relaxed text-white/75">
+              To maintain high standards, every laptop we offer passes through a detailed inspection that covers:
+            </p>
+          </Reveal>
+
+          <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            {qualityChecks.map(({ icon: Icon, text }, i) => (
+              <Reveal key={text} delay={i * 70} className="h-full">
+                <li className="h-full rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur">
+                  <div className="flex items-center justify-between">
+                    <span className="grid h-11 w-11 place-items-center rounded-xl bg-gold text-ink">
+                      <Icon size={22} />
+                    </span>
+                    <span className="font-display text-2xl font-semibold text-white/20">0{i + 1}</span>
+                  </div>
+                  <p className="mt-4 text-sm font-semibold leading-relaxed">{text}</p>
+                </li>
+              </Reveal>
+            ))}
+          </ul>
+
+          <Reveal>
+            <p className="mx-auto mt-10 max-w-2xl text-center leading-relaxed text-white/75">
+              This process allows us to confidently provide reliable devices that meet the needs of modern users.
+            </p>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Why customers trust us */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
         <Reveal>
           <SectionHeading
-            eyebrow={`Why choose ${site.name}`}
-            title="What You Can Expect When You Buy From Us"
-            text="We keep the whole process simple, from choosing a laptop to collecting it."
+            eyebrow="Trust"
+            title={`Why Customers Trust ${site.name}`}
+            text={`Trust is at the center of everything we do. Customers choose ${site.name} because we provide:`}
           />
         </Reveal>
-        <div className="mt-10 grid gap-5 sm:grid-cols-2">
-          {values.map(({ icon: Icon, title, text }, i) => (
-            <Reveal key={title} delay={i * 80} className="h-full">
-              <div className="flex h-full gap-5 rounded-2xl border border-line bg-white p-6 transition duration-300 hover:-translate-y-1 hover:border-brand/40 hover:shadow-lg hover:shadow-brand/10">
+
+        <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {trustPoints.map(({ icon: Icon, title }, i) => (
+            <Reveal key={title} delay={i * 60} className="h-full">
+              <li className="flex h-full items-center gap-4 rounded-2xl border border-line bg-white p-5 transition duration-300 hover:-translate-y-1 hover:border-brand/40 hover:shadow-lg hover:shadow-brand/10">
                 <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-brand/10 text-brand">
                   <Icon size={24} />
                 </span>
-                <div>
-                  <h3 className="text-base font-bold">{title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-ink/65">{text}</p>
-                </div>
+                <span className="text-base font-bold">{title}</span>
+              </li>
+            </Reveal>
+          ))}
+        </ul>
+
+        <Reveal>
+          <div className="mx-auto mt-10 max-w-3xl space-y-4 text-center leading-relaxed text-ink/70">
+            <p>
+              By choosing pre-owned laptops from us, customers also help reduce electronic waste, which is a
+              growing global concern according to the{" "}
+              <a
+                href="https://www.unep.org/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-brand underline-offset-4 hover:underline"
+              >
+                United Nations Environment Programme
+              </a>
+              .
+            </p>
+            <p>
+              We believe in building long-term relationships with our customers by offering products and
+              services that deliver real value.
+            </p>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* Mission */}
+      <section className="relative overflow-hidden bg-ink py-16 text-white sm:py-24">
+        <div className="absolute -right-16 top-0 h-72 w-72 rounded-full bg-brand/30 blur-3xl" />
+        <div className="absolute -left-16 bottom-0 h-72 w-72 rounded-full bg-gold/15 blur-3xl" />
+        <div className="relative mx-auto max-w-4xl px-4 text-center sm:px-6">
+          <Reveal>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">Our mission</p>
+            <h2 className="mt-4 font-display text-4xl font-semibold tracking-tight sm:text-6xl">
+              <span className="text-white">Connect.</span> <span className="text-gold">Upgrade.</span>{" "}
+              <span className="text-sky-300">Thrive.</span>
+            </h2>
+            <div className="mx-auto mt-8 max-w-3xl space-y-4 leading-relaxed text-white/75">
+              <p>
+                Our mission is to simplify digital life by delivering smart, stylish, and dependable
+                technology products. We believe great technology should be accessible, intuitive, and
+                empowering, enabling people to connect better, upgrade seamlessly, and thrive in every aspect
+                of their digital journey.
+              </p>
+              <p>
+                We are dedicated to making quality technology accessible and affordable for individuals,
+                students, and businesses across Nigeria through transparent pricing, fast delivery, and
+                consistent customer support.
+              </p>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Location and service area */}
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
+        <Reveal>
+          <SectionHeading
+            eyebrow="Where we are"
+            title="Our Location and Service Area"
+            text={`${site.name} operates from Lagos, with pickup centres in Abuja and Port Harcourt, Nigeria, and we deliver pre-owned laptops to customers across the country. Whether you are in Lagos, Abuja, Port Harcourt or any other city, you can shop confidently knowing your device will be delivered safely and on time.`}
+          />
+        </Reveal>
+
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {places.map(({ icon: Icon, title, text }, i) => (
+            <Reveal key={title} delay={i * 70} className="h-full">
+              <div className="h-full rounded-2xl border border-line bg-white p-6 transition duration-300 hover:-translate-y-1 hover:border-brand/40 hover:shadow-lg hover:shadow-brand/10">
+                <span className="grid h-12 w-12 place-items-center rounded-xl bg-brand/10 text-brand">
+                  <Icon size={22} />
+                </span>
+                <h3 className="mt-4 font-display text-xl font-semibold">{title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-ink/65">{text}</p>
               </div>
             </Reveal>
           ))}
         </div>
       </section>
 
-      {/* How ordering works */}
-      <section className="bg-gradient-to-br from-ink via-ink-soft to-brand-deep py-16 text-white sm:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+      {/* Commitment */}
+      <section className="bg-paper py-16 sm:py-20">
+        <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:items-center">
           <Reveal>
-            <p className="text-center text-xs font-bold uppercase tracking-[0.18em] text-gold">How it works</p>
-            <h2 className="mx-auto mt-3 max-w-2xl text-center font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-              Buying a Laptop From Us in Four Steps
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">Our commitment</p>
+            <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+              What we promise every customer
             </h2>
+            <p className="mt-5 leading-relaxed text-ink/70">
+              Customer satisfaction and trust are at the core of everything we do. We are committed to
+              providing a smooth and reliable shopping experience. From helping you choose the right laptop to
+              offering after-sales support, our team is always ready to assist. Your satisfaction is our
+              priority.
+            </p>
           </Reveal>
-          <ol className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {steps.map(({ icon: Icon, title, text }, i) => (
-              <Reveal key={title} delay={i * 80} className="h-full">
-                <li className="h-full rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
-                  <div className="flex items-center justify-between">
-                    <span className="grid h-11 w-11 place-items-center rounded-xl bg-gold text-ink">
-                      <Icon size={22} />
+
+          <Reveal delay={100}>
+            <div className="rounded-3xl border border-line bg-white p-6 sm:p-8">
+              <p className="text-sm font-bold">At {company.name}, we are committed to:</p>
+              <ul className="mt-4 space-y-3">
+                {commitments.map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-[15px] leading-relaxed text-ink/75">
+                    <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-gold/25 text-gold-deep">
+                      <Check size={14} />
                     </span>
-                    <span className="font-display text-3xl font-semibold text-white/20">0{i + 1}</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Registration and contact */}
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
+        <div className="grid gap-6 lg:grid-cols-[1fr_1.3fr]">
+          <Reveal className="h-full">
+            <div className="h-full rounded-3xl border border-line bg-white p-6 sm:p-8">
+              <h2 className="font-display text-2xl font-semibold">Business Registration</h2>
+              <dl className="mt-6 space-y-5 text-sm">
+                <div className="flex gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand/10 text-brand">
+                    <Building2 size={18} />
+                  </span>
+                  <div>
+                    <dt className="text-xs uppercase tracking-wider text-ink/50">Registered business name</dt>
+                    <dd className="mt-0.5 font-semibold">{obracompany.name}</dd>
                   </div>
-                  <h3 className="mt-4 text-base font-bold">{title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-white/70">{text}</p>
-                </li>
-              </Reveal>
-            ))}
-          </ol>
-        </div>
-      </section>
+                </div>
+                <div className="flex gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand/10 text-brand">
+                    <FileBadge size={18} />
+                  </span>
+                  <div>
+                    <dt className="text-xs uppercase tracking-wider text-ink/50">CAC registration number</dt>
+                    <dd className="mt-0.5 font-semibold">
+                      <RichText text={obracompany.cac} />
+                    </dd>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand/10 text-brand">
+                    <MapPin size={18} />
+                  </span>
+                  <div>
+                    <dt className="text-xs uppercase tracking-wider text-ink/50">Registered address</dt>
+                    <dd className="mt-0.5 font-semibold leading-relaxed">
+                      <RichText text={obracompany.registeredAddress} />
+                    </dd>
+                  </div>
+                </div>
+              </dl>
+            </div>
+          </Reveal>
 
-      {/* FAQ */}
-      <section className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20">
-        <Reveal>
-          <SectionHeading eyebrow="FAQ" title="Questions We Are Often Asked" />
-        </Reveal>
-        <div className="mt-10 space-y-3">
-          {faqs.map(({ q, a }) => (
-            <details key={q} className="group rounded-2xl border border-line bg-white transition open:border-brand/40 open:shadow-md open:shadow-brand/5">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-5 text-base font-semibold [&::-webkit-details-marker]:hidden">
-                {q}
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-paper text-lg leading-none text-brand transition group-open:rotate-45">+</span>
-              </summary>
-              <p className="px-6 pb-5 text-sm leading-relaxed text-ink/70">{a}</p>
-            </details>
-          ))}
-        </div>
-      </section>
+          <Reveal delay={100} className="h-full">
+            <div className="h-full rounded-3xl bg-gradient-to-br from-ink via-ink-soft to-brand-deep p-6 text-white sm:p-8">
+              <h2 className="font-display text-2xl font-semibold">About {site.name} Contact Information</h2>
+              <p className="mt-2 text-sm text-white/75">Customers can reach us through the following channels:</p>
 
-      {/* CTA */}
-      <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 sm:pb-20">
-        <Reveal>
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-deep via-brand to-ink-soft p-8 text-white sm:p-12">
-            <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-gold/30 blur-3xl" />
-            <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-              <div className="max-w-xl">
-                <h2 className="font-display text-3xl font-semibold">Ready to find your next laptop?</h2>
-                <p className="mt-3 flex items-start gap-2 leading-relaxed text-white/80">
-                  <MapPin size={18} className="mt-1 shrink-0 text-gold" />
-                  Browse our laptops online, or message us and visit the store at {site.address.area}, {site.address.city}.
-                </p>
-              </div>
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <Link href="/laptops" className="inline-flex items-center justify-center rounded-full bg-white px-7 py-3.5 text-sm font-bold text-ink transition hover:-translate-y-0.5 hover:bg-gold">
-                  Shop laptops
+              <dl className="mt-6 grid gap-5 sm:grid-cols-2">
+                <div className="flex gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/10 text-gold">
+                    <Phone size={18} />
+                  </span>
+                  <div>
+                    <dt className="text-xs uppercase tracking-wider text-white/50">Telephone / WhatsApp</dt>
+                    <dd className="mt-0.5 text-sm font-semibold">
+                      <a href={`tel:${site.phone.tel}`} className={link}>{site.phone.display}</a>
+                    </dd>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/10 text-gold">
+                    <Mail size={18} />
+                  </span>
+                  <div className="min-w-0">
+                    <dt className="text-xs uppercase tracking-wider text-white/50">Email</dt>
+                    <dd className="mt-0.5 break-words text-sm font-semibold">
+                      <a href={`mailto:${site.email}`} className={link}>{site.email}</a>
+                    </dd>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/10 text-gold">
+                    <MapPin size={18} />
+                  </span>
+                  <div>
+                    <dt className="text-xs uppercase tracking-wider text-white/50">Store location</dt>
+                    <dd className="mt-0.5 text-sm font-semibold leading-relaxed">{fullAddress}</dd>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/10 text-gold">
+                    <Clock size={18} />
+                  </span>
+                  <div>
+                    <dt className="text-xs uppercase tracking-wider text-white/50">Business hours</dt>
+                    <dd className="mt-0.5 text-sm font-semibold">
+                      <RichText text={obracompany.hours} />
+                    </dd>
+                  </div>
+                </div>
+              </dl>
+
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                <Link
+                  href="/laptops"
+                  className="group inline-flex items-center justify-center gap-2 rounded-full bg-gold px-6 py-3 text-sm font-bold text-ink transition hover:-translate-y-0.5 hover:bg-white"
+                >
+                  Browse our laptops
+                  <ArrowRight size={16} className="transition group-hover:translate-x-1" />
                 </Link>
                 <a
                   href={whatsappLink("Hello Obravision, I would like to ask about your laptops.")}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 rounded-full border border-white/40 px-7 py-3.5 text-sm font-bold text-white transition hover:bg-white hover:text-ink"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[#1faa59] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#178a47]"
                 >
                   <WhatsAppIcon size={18} /> Chat on WhatsApp
                 </a>
+                <a
+                  href={mapsLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-white/40 px-6 py-3 text-sm font-bold transition hover:bg-white hover:text-ink"
+                >
+                  Visit our store <ExternalLink size={14} />
+                </a>
               </div>
             </div>
-          </div>
-        </Reveal>
+          </Reveal>
+        </div>
       </section>
     </>
   );

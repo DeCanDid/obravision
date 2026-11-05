@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { site } from "@/lib/site";
 import { createPublicClient } from "@/lib/supabase/public";
+import { policies } from "@/lib/policies";
 
 export const revalidate = 3600;
 
@@ -17,6 +18,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${site.url}/laptops`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
     { url: `${site.url}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${site.url}/contact`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${site.url}/policies`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+    ...policies.map((p) => ({
+      url: `${site.url}/policies/${p.slug}`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
+    })),
   ];
 
   const brands: MetadataRoute.Sitemap = site.brands.map((b) => ({
