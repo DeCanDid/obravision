@@ -4,15 +4,18 @@ import { fullAddress, site } from "@/lib/site";
 export const company = {
   name: "Obravision Limited",
   cac: "2002090",
+  registeredAddress: "10 Palm Springs Road Ikate, Lekki, Lagos, Nigeria, 101245",
   hours: "Monday to Sat: 9:00 a.m. – 6:00 p.m.",
-  updated: "Last updated: Nov 05, 2026",
+  updated: "Last updated: Nov 07, 2026",
 };
 
 /* ---------- Types ---------- */
+export type OlItem = string | { text: string; sub: string[] };
+
 export type Block =
   | { type: "p"; text: string }
   | { type: "ul"; items: string[] }
-  | { type: "ol"; items: string[] }
+  | { type: "ol"; items: OlItem[] }
   | { type: "h3"; text: string };
 
 export type Section = { heading: string; blocks: Block[] };
@@ -26,12 +29,13 @@ export type Policy = {
   intro: string[];
   sections: Section[];
   contactNote: string;
+  contactTitle?: string;
 };
 
 /* ---------- Small helpers to keep the content readable ---------- */
 const p = (text: string): Block => ({ type: "p", text });
-const ul = (...items: string[]): Block => ({ type: "ul", items });
-const ol = (...items: string[]): Block => ({ type: "ol", items });
+const ul = (...items: OlItem[]): Block => ({ type: "ol", items });
+const ol = (...items: OlItem[]): Block => ({ type: "ol", items });
 const h3 = (text: string): Block => ({ type: "h3", text });
 const sec = (heading: string, ...blocks: Block[]): Section => ({ heading, blocks });
 
@@ -262,6 +266,7 @@ export const policies: Policy[] = [
       ),
     ],
     contactNote: `For shipping-related enquiries, customers may contact ${name} via email, phone, WhatsApp, or by visiting our physical store.`,
+    contactTitle: "Contact Information",
   },
 
   {
@@ -350,25 +355,149 @@ export const policies: Policy[] = [
     contactNote: "For any questions regarding returns or refunds, please contact us:",
   },
 
-  {
+    {
     slug: "terms-and-conditions",
     title: "Terms and Conditions",
     summary:
-      "The terms and conditions for using the Obravision website and buying from Obravision Limited. Full terms coming soon.",
+      "The terms and conditions for using the Obravision website and buying from Obravision Limited: eligibility, pricing and payment, orders, shipping, returns, warranty and more.",
     updated: company.updated,
-    numbered: false,
-    intro: [],
+    numbered: true,
+    intro: [
+      "By accessing or using our website (Obravision.com) and purchasing our products, you agree to be bound by the following Terms & Conditions. Please read them carefully before using our services.",
+    ],
     sections: [
       sec(
-        "Terms and Conditions",
-        p("[Terms and Conditions content to be added]"),
+        "Introduction",
         p(
-          "Our full Terms and Conditions are being prepared and will be published on this page. If you have any questions in the meantime, please contact us using the details below."
+          `These Terms & Conditions govern your use of our website and the purchase of products from ${name} (“we”, “us”, “our”). By using this website, you agree to comply with these terms. We may update these terms at any time without prior notice.`
         )
       ),
+      sec(
+        "Definitions",
+        ol(
+          "“Customer”, “you”, “your” – any person using our website or purchasing our products",
+          "“Used laptops” – pre-owned laptops tested and certified for resale",
+          "“Website” – Obravision.com and all associated pages"
+        )
+      ),
+      sec(
+        "Eligibility",
+        p("To use our website or place an order, you must:"),
+        ol("Be at least 18 years old", "Provide accurate and complete information during checkout")
+      ),
+      sec(
+        "Product Information",
+        p(`${name} sells new, used and refurbished laptops. Please note the following:`),
+        ol(
+          "All devices are tested and verified before sale",
+          "All devices are accurately described to the best of our knowledge",
+          "Devices are pre-owned and may show minor cosmetic wear",
+          "Battery health varies for used devices",
+          "Cosmetic imperfections are normal and not considered defects",
+          "Product images may differ slightly due to lighting or screen settings"
+        )
+      ),
+      sec(
+        "Pricing & Payment",
+        ol(
+          "All prices are listed in Nigerian Naira (NGN)",
+          "Prices may change without notice",
+          "Payment must be completed before an order is processed",
+          "Accepted payment methods include bank transfer, debit/credit cards, and other methods listed at checkout"
+        )
+      ),
+      sec(
+        "Order Acceptance & Cancellation",
+        p("We reserve the right to:"),
+        ol(
+          "Accept or reject any order",
+          "Cancel an order if the item becomes unavailable or if fraudulent activity is suspected"
+        ),
+        p("Customers may cancel an order before it is shipped.")
+      ),
+      sec(
+        "Shipping & Delivery",
+        ol(
+          "We deliver nationwide within Nigeria",
+          "Delivery timelines vary based on location and logistics partners",
+          "Customers must provide accurate delivery information",
+          "Delays caused by courier services are outside our control"
+        )
+      ),
+      sec(
+        "Returns & Refunds",
+        ol(
+          "Our return policy applies only to defective used laptops.",
+          "Return Window: Returns are accepted within 7 days from the date the item is delivered.",
+          {
+            text: "Eligible Returns: A laptop is considered defective if:",
+            sub: [
+              "It has a hardware or functional issue not caused by customer misuse",
+              "It does not perform as described",
+            ],
+          },
+          {
+            text: "We do not accept returns for the following reasons:",
+            sub: [
+              "Change of mind",
+              "Cosmetic wear",
+              "Battery performance within normal used-device range",
+              "Damage caused after delivery",
+              "Software issues caused by the customer",
+            ],
+          },
+          "Refunds are processed within 7 business days after inspection and approval.",
+          "For full details, please see our {{Return and Refund Policy|/policies/return-and-refund-policy}} page."
+        )
+      ),
+      sec(
+        "Warranty",
+        ol(
+          "All used laptops include a 30-day functional warranty covering hardware defects only.",
+          {
+            text: "The warranty does not cover cases of:",
+            sub: [
+              "Liquid damage",
+              "Physical damage",
+              "Unauthorized repairs",
+              "Software corruption",
+              "Battery degradation",
+            ],
+          }
+        )
+      ),
+      sec(
+        "Limitation of Liability",
+        p(`${name} is not liable for:`),
+        ol("Indirect or consequential damages", "Data loss on used laptops", "Customer misuse or negligence"),
+        p("Customers are responsible for backing up data before use.")
+      ),
+      sec(
+        "Intellectual Property",
+        p(
+          `All content on this website, including text, images, logos, and graphics, is the property of ${name} and may not be copied or reproduced without permission.`
+        )
+      ),
+      sec(
+        "Privacy",
+        p(
+          "Your personal information is handled in accordance with our {{Privacy Policy|/policies/privacy-policy}}. By using our website, you consent to the collection and use of your data as described there."
+        )
+      ),
+      sec(
+        "Prohibited Activities",
+        p("You agree not to:"),
+        ol("Misuse the website", "Attempt to hack, disrupt, or interfere with our systems", "Submit fraudulent orders")
+      ),
+      sec(
+        "Governing Law",
+        p("These Terms & Conditions are governed by the laws of the Federal Republic of Nigeria.")
+      ),
     ],
-    contactNote: "For any questions about these terms, please contact us:",
-  },
+    contactTitle: "Contact Information",
+    contactNote: "For questions or support, contact us at:",
+    },
+  
 ];
 
 export const getPolicy = (slug: string) => policies.find((x) => x.slug === slug);
@@ -378,5 +507,5 @@ export const obracompany = {
   cac: "2002090",
   registeredAddress: "10 Palm Springs Road Ikate, Lekki, Lagos, Nigeria, 101245",
   hours: "Monday to Sat: 9:00 a.m. – 6:00 p.m.",
-  updated: "Last updated: Nov 05, 2026",
+  updated: "Last updated: Nov 07, 2026",
 };

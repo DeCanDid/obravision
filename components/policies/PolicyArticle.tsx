@@ -35,14 +35,30 @@ function Blocks({ blocks }: { blocks: Block[] }) {
                 ))}
               </ul>
             );
-          case "ol":
+            case "ol":
             return (
-              <ol key={i} className="list-decimal space-y-2.5 pl-6 marker:font-bold marker:text-brand">
-                {block.items.map((item) => (
-                  <li key={item} className="pl-1 text-[15px] leading-7 text-ink/75">
-                    <RichText text={item} />
-                  </li>
-                ))}
+              <ol key={i} className="list-decimal space-y-3 pl-6 marker:font-bold marker:text-brand">
+                {block.items.map((item) => {
+                  const text = typeof item === "string" ? item : item.text;
+                  const sub = typeof item === "string" ? [] : item.sub;
+                  return (
+                    <li key={text} className="pl-1 text-[15px] leading-7 text-ink/75">
+                      <RichText text={text} />
+                      {sub.length > 0 && (
+                        <ul className="mt-2 space-y-2">
+                          {sub.map((s) => (
+                            <li
+                              key={s}
+                              className="relative pl-5 before:absolute before:left-0 before:top-3 before:h-1.5 before:w-1.5 before:rounded-full before:bg-gold"
+                            >
+                              <RichText text={s} />
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </li>
+                  );
+                })}
               </ol>
             );
         }
@@ -96,7 +112,11 @@ export default function PolicyArticle({ policy }: { policy: Policy }) {
         ))}
       </div>
 
-      <PolicyContact note={policy.contactNote} />
+      <PolicyContact
+        note={policy.contactNote}
+        title={policy.contactTitle ?? "Contact us"}
+        number={policy.numbered ? policy.sections.length + 1 : undefined}
+      />
 
       <nav aria-label="More policies" className="mt-8 grid gap-3 sm:grid-cols-2">
         {prev ? (

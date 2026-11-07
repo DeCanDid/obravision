@@ -97,7 +97,7 @@ export default function PolicyNav() {
                       ))}
                       <li>
                         <a href="#contact" className="block py-1.5 text-[13px] font-semibold text-brand">
-                          Contact us
+                          {policy.contactTitle ?? "Contact us"}
                         </a>
                       </li>
                     </ul>
